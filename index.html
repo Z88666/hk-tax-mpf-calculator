@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HK Salaries Tax + MPF Calculator | 香港薪俸稅 + 強積金計算機</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#ffffff;color:#222;margin:0;padding:0;line-height:1.5}
+.wrap{max-width:800px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:8px 0 4px}
+h2{font-size:17px;margin:22px 0 8px;border-bottom:2px solid #0b6fa4;padding-bottom:4px}
+h3{font-size:15px;margin:16px 0 6px}
+.sub{color:#555;font-size:14px}
+label{display:block;font-size:14px;margin:10px 0 2px;font-weight:bold}
+input[type=number],select{width:100%;padding:9px;border:1px solid #999;border-radius:6px;font-size:16px;box-sizing:border-box;background:#fff}
+input[type=checkbox]{width:18px;height:18px;vertical-align:middle}
+.chk{font-weight:normal}
+.row{display:flex;gap:10px}
+.row>div{flex:1}
+button{background:#0b6fa4;color:#fff;border:0;border-radius:6px;padding:11px 18px;font-size:16px;cursor:pointer;margin:6px 6px 0 0}
+button.sec{background:#eee;color:#222}
+button.chip{background:#e8f2f8;color:#0b6fa4;padding:6px 10px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+td,th{border-bottom:1px solid #ddd;padding:7px 4px;text-align:left;vertical-align:top}
+td.num,th.num{text-align:right;white-space:nowrap}
+.big{font-size:26px;font-weight:bold;color:#0b6fa4}
+.big2{font-size:18px;font-weight:bold}
+.warn{background:#fff8e1;border:1px solid #e6c200;border-radius:6px;padding:10px;font-size:13px;margin-top:14px}
+.note{font-size:13px;color:#555}
+.good{color:#0b6fa4;font-weight:bold}
+.muted{color:#777;font-size:13px}
+#result{display:none}
+.bar{height:10px;background:#0b6fa4;border-radius:5px;min-width:2px}
+.barrow td{border-bottom:1px solid #eee}
+.cmp td.win{background:#e8f5e9;font-weight:bold}
+.cmp td.lose{background:#fff}
+.tag{display:inline-block;background:#e8f2f8;color:#0b6fa4;border-radius:4px;padding:1px 7px;font-size:12px;margin-left:6px}
+@media print{button,.noprint{display:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>HK Salaries Tax + MPF Calculator</h1>
+<p class="sub">香港薪俸稅 + 強積金計算機 — 免費、免登入、離線可用、資料只存於你的瀏覽器 (localStorage)。Free, no login, works offline, data stays on your device.</p>
+
+<h2>1. Tax year 課稅年度</h2>
+<label for="year">Year of assessment 課稅年度</label>
+<select id="year">
+<option value="2025/26" selected>2025/26 (1 Apr 2025 – 31 Mar 2026)</option>
+<option value="2026/27">2026/27 (1 Apr 2026 – 31 Mar 2027)</option>
+</select>
+<p class="note" id="yearNote"></p>
+
+<h2>2. Income 入息</h2>
+<label for="salary">Monthly salary 月薪 (HK$)</label>
+<input type="number" id="salary" min="0" step="1" value="30000">
+<label for="bonus">Bonus / 13th month 花紅 / 第十三個月糧 — annual 全年 (HK$)</label>
+<input type="number" id="bonus" min="0" step="1" value="0">
+
+<h2>3. Deductions 扣除</h2>
+<label for="rent">Monthly rent paid 每月租金 (HK$) — domestic rent deduction 租金扣稅</label>
+<input type="number" id="rent" min="0" step="1" value="0">
+<p class="note">Deductible up to HK$100,000/year. 扣稅上限每年 HK$100,000。Must be a stamped tenancy, you must not own HK residential property, and your employer must not provide housing. 須為已加蓋印花租約、你並無擁有香港住宅物業、僱主無提供居所。</p>
+<label class="chk"><input type="checkbox" id="rentExtra"> Extra HK$20,000 rent deduction — I live with a child born on/after 25 Oct 2023 (cap then HK$120,000). 額外 HK$20,000 租金扣除 — 與 2023 年 10 月 25 日或之後出生的子女同住（上限 HK$120,000）。</label>
+<label for="tvc">MPF voluntary contributions (TVC) 自願性供款 — annual 全年 (HK$)</label>
+<input type="number" id="tvc" min="0" step="1" value="0">
+<p class="note">TVC is tax-deductible up to HK$60,000/year (shared with qualifying deferred annuity premiums). 自願性供款扣稅上限每年 HK$60,000（與合資格延期年金保費共用）。</p>
+<label for="homeloan">Home loan interest 居所貸款利息 — annual 全年 (HK$)</label>
+<input type="number" id="homeloan" min="0" step="1" value="0">
+<p class="note">Deductible up to HK$100,000/year, for up to 20 years of assessment, on a loan to buy your Hong Kong home that you live in. 扣稅上限每年 HK$100,000，最多 20 個課稅年度，須為購買自住香港住宅的貸款利息。</p>
+<label for="selfedu">Self-education expenses 個人進修開支 — annual 全年 (HK$)</label>
+<input type="number" id="selfedu" min="0" step="1" value="0">
+<p class="note">Deductible up to HK$100,000/year for prescribed courses / exams. 扣稅上限每年 HK$100,000，須為指明教育課程或考試開支。</p>
+<label for="elderlycare">Elderly residential care expenses 長者住宿照顧開支 — annual 全年 (HK$)</label>
+<input type="number" id="elderlycare" min="0" step="1" value="0">
+<p class="note">Deductible up to HK$100,000/year for a dependent parent / grandparent aged 60+ (or eligible for Disability Allowance) living in a licensed residential care home, where you paid the expenses. 扣稅上限每年 HK$100,000，須為你供養、入住持牌安老院舍的 60 歲或以上父母 / 祖父母（或合資格領取傷殘津貼者）支付的住宿照顧開支。</p>
+
+<h2>4. Family 狀況</h2>
+<div class="row">
+<div>
+<label for="married">Marital status 婚姻狀況</label>
+<select id="married">
+<option value="single" selected>Single 單身</option>
+<option value="married">Married 已婚</option>
+</select>
+</div>
+<div>
+<label for="children">Children 子女數目 (0–9)</label>
+<input type="number" id="children" min="0" max="9" step="1" value="0">
+</div>
+</div>
+<label class="chk"><input type="checkbox" id="singleParent"> I am a single parent with a dependent child (extra single-parent allowance, same amount as the basic allowance). 我是單親家長，有受養子女（額外單親免稅額，金額與基本免稅額相同）。</label>
+<label class="chk"><input type="checkbox" id="childBorn"> A child was born this year (extra child allowance equal to one year's child allowance). 今年有子女出生（額外一年子女免稅額）。</label>
+<label class="chk"><input type="checkbox" id="childBornLast"> A child was born last year (2025/26) — from 2026/27 the extra child allowance runs for a second year (children born on/after 1 Apr 2025). 上年度有子女出生（2025/26 年出生，2026/27 第二年額外免稅額，限 2025 年 4 月 1 日或之後出生）。</label>
+<div class="row">
+<div>
+<label for="parents">Dependent parents / grandparents 供養父母 / 祖父母數目 (aged 55+)</label>
+<input type="number" id="parents" min="0" max="9" step="1" value="0">
+</div>
+<div>
+<label for="parentAge">Parents' age 父母年齡</label>
+<select id="parentAge">
+<option value="60" selected>60 or above 60 歲或以上</option>
+<option value="55">55–59 歲 (half allowance 一半免稅額)</option>
+</select>
+</div>
+</div>
+<label for="living">Parents living with you? 父母是否與你同住？</label>
+<select id="living">
+<option value="no" selected>No 否</option>
+<option value="yes">Yes, continuously all year 是，全年同住</option>
+</select>
+<p class="note">Dependent parent allowance is for age 60+ (or Disability Allowance recipients); age 55–59 is half the amount. If a parent lives with you continuously all year, an additional allowance of the same amount applies (so double). 供養父母免稅額以 60 歲或以上為準；55–59 歲為一半金額。父母全年與你同住可再享同等額外免稅額（即雙倍）。Single-parent allowance only applies if you are unmarried with a dependent child. 單親免稅額只適用於未婚而有受養子女的人士。</p>
+<div class="row">
+<div>
+<label for="disabledDeps">Disabled dependants 傷殘受養人數目 (0–9)</label>
+<input type="number" id="disabledDeps" min="0" max="9" step="1" value="0">
+</div>
+<div>
+<label for="siblings">Dependent brothers / sisters 供養兄弟姊妹數目 (0–9)</label>
+<input type="number" id="siblings" min="0" max="9" step="1" value="0">
+</div>
+</div>
+<label class="chk"><input type="checkbox" id="personalDisability"> I am eligible for Disability Allowance under the Social Security Allowance Scheme (extra personal disability allowance). 本人合資格領取傷殘津貼（額外傷殘人士免稅額）。</label>
+<p class="note">Disabled dependant allowance: $75,000 each in 2025/26, $82,500 in 2026/27 — for a dependant eligible for Disability Allowance (or certified as severely disabled). It is <b>additional</b> to the child / parent allowance for the same person, so a disabled child gets both. Dependent brother / sister allowance: $37,500 each in 2025/26, $41,250 in 2026/27. Personal disability allowance (same amounts as the disabled dependant allowance) applies if you yourself are eligible for Disability Allowance. 傷殘受養人免稅額每名 $75,000（2025/26）/ $82,500（2026/27），與子女 / 父母免稅額可同時申索；供養兄弟姊妹每名 $37,500 / $41,250；本人合資格領取傷殘津貼另有同額傷殘人士免稅額。</p>
+
+<h2>5. Tax reduction 一次性稅務寬減</h2>
+<label class="chk"><input type="checkbox" id="reduction" checked> Apply the one-off 100% salaries tax reduction (if announced for this year). 適用一次性 100% 薪俸稅寬減（如該年度已公布）。</label>
+<p class="note" id="reductionNote"></p>
+
+<h2>6. Spouse — joint assessment check 配偶 — 合併評稅比較 <span class="tag">optional 自選</span></h2>
+<label class="chk"><input type="checkbox" id="jointOn"> Compare joint assessment vs separate assessment (simplified — see note). 比較合併評稅 vs 分開評稅（簡化估算，見說明）。</label>
+<div class="row">
+<div>
+<label for="spouseSalary">Spouse monthly salary 配偶月薪 (HK$)</label>
+<input type="number" id="spouseSalary" min="0" step="1" value="0">
+</div>
+<div>
+<label for="spouseBonus">Spouse bonus 配偶花紅 — annual 全年 (HK$)</label>
+<input type="number" id="spouseBonus" min="0" step="1" value="0">
+</div>
+</div>
+<p class="note">Joint pooling 合併計算：mandatory MPF is the sum of both spouses' (each capped $18,000); TVC, self-education and elderly care pool per person ($60,000 / $100,000 / $100,000 each); rent and home-loan interest pool per couple (one $100,000 cap each — $120,000 rent cap if the child condition in §3 applies); disabled-dependant and sibling allowances pool by count. The spouse's own personal-disability allowance is not modelled. Under separate assessment the children and parents stay with you; the spouse is calculated with the basic allowance only, plus their own deductions and dependant allowances above. Treat the result as a guide, not a filing decision. 實際合併評稅另有細則，只供參考。</p>
+<div class="row">
+<div>
+<label for="spouseTvc">Spouse TVC 配偶自願性供款 — annual 全年 (HK$)</label>
+<input type="number" id="spouseTvc" min="0" step="1" value="0">
+</div>
+<div>
+<label for="spouseRent">Spouse monthly rent 配偶每月租金 (HK$)</label>
+<input type="number" id="spouseRent" min="0" step="1" value="0">
+</div>
+</div>
+<div class="row">
+<div>
+<label for="spouseHomeLoan">Spouse home loan interest 配偶居所貸款利息 — annual 全年 (HK$)</label>
+<input type="number" id="spouseHomeLoan" min="0" step="1" value="0">
+</div>
+<div>
+<label for="spouseSelfEdu">Spouse self-education 配偶個人進修開支 — annual 全年 (HK$)</label>
+<input type="number" id="spouseSelfEdu" min="0" step="1" value="0">
+</div>
+</div>
+<div class="row">
+<div>
+<label for="spouseElderly">Spouse elderly care 配偶長者住宿照顧開支 — annual 全年 (HK$)</label>
+<input type="number" id="spouseElderly" min="0" step="1" value="0">
+</div>
+<div>
+<label for="spouseDisabled">Spouse disabled dependants 配偶傷殘受養人數目 (0–9)</label>
+<input type="number" id="spouseDisabled" min="0" max="9" step="1" value="0">
+</div>
+<div>
+<label for="spouseSiblings">Spouse dependent siblings 配偶供養兄弟姊妹數目 (0–9)</label>
+<input type="number" id="spouseSiblings" min="0" max="9" step="1" value="0">
+</div>
+</div>
+
+<p>
+<button type="button" onclick="calculate()">Calculate 計算</button>
+<button type="button" class="sec" onclick="resetForm()">Reset 重設</button>
+<button type="button" class="sec noprint" onclick="copySummary()">Copy summary 複製摘要</button>
+<button type="button" class="sec noprint" onclick="window.print()">Print / Save PDF 列印</button>
+</p>
+<p>
+<span class="muted">Examples 例子：</span>
+<button type="button" class="chip" onclick="preset(18000,0,'single',0,0)">$18,000 應屆畢業生</button>
+<button type="button" class="chip" onclick="preset(20000,0,'single',0,0)">$20,000 單身</button>
+<button type="button" class="chip" onclick="preset(25000,25000,'single',0,0)">$25,000 單身+花紅</button>
+<button type="button" class="chip" onclick="preset(40000,40000,'married',1,0)">$40,000 已婚 1 子</button>
+<button type="button" class="chip" onclick="preset(60000,60000,'married',2,1)">$60,000 已婚 2 子 1 親</button>
+<button type="button" class="chip" onclick="preset(8000,0,'single',0,0)">$8,000 兼職</button>
+<button type="button" class="chip" onclick="preset(150000,150000,'single',0,0)">$150,000 高薪</button>
+</p>
+
+<div id="result">
+<h2>Result 結果 <span id="rYearTag" class="tag"></span></h2>
+<p>Tax payable 應繳稅款（全年）<br><span class="big" id="rTax"></span> &nbsp;<span id="rMethod" class="muted"></span></p>
+<p>Monthly take-home pay 每月實得工資<br><span class="big2" id="rTakeHome"></span> <span class="muted">(after employee MPF + salaries tax / 扣除僱員強積金及薪俸稅後)</span></p>
+<p>Effective tax rate 實際稅率 <span class="big2" id="rEff"></span></p>
+<p class="note" id="rMonthlyTax"></p>
+
+<h2>Year comparison 年度比較 2025/26 vs 2026/27</h2>
+<table class="cmp" id="cmpTable"></table>
+<p class="note" id="cmpNote"></p>
+
+<h2>Breakdown 分項</h2>
+<table id="breakTable"></table>
+
+<h2>Progressive tax bands 累進稅率分層</h2>
+<table id="bandTable"></table>
+<p class="note">Each band is taxed at its own rate, on net chargeable income. 應課稅入息按每層各自稅率計稅。Progressive rates: 2% first $50,000, 6% next $50,000, 10% next $50,000, 14% next $50,000, 17% remainder.</p>
+
+<h2>Progressive vs standard rate 累進稅率 vs 標準稅率</h2>
+<table id="rateTable"></table>
+<p class="note">IRD charges the lower of the two. 稅局按兩者中較低者徵稅。Standard rate: 15% on the first $5,000,000 of net income, 16% on the remainder (before allowances).</p>
+
+<h2>MPF 強積金</h2>
+<table id="mpfTable"></table>
+<p class="note">Employee 5% of monthly relevant income; employer 5% too. Below HK$7,100/month the employee pays nothing (employer still pays 5%). Capped at HK$1,500/month each once relevant income reaches HK$30,000/month. 僱員及僱主各供月薪 5%；月薪低於 HK$7,100 僱員免供（僱主仍須供 5%）；月薪達 HK$30,000 起各方每月上限 HK$1,500。MPF in this tool is calculated on monthly salary only; a bonus counts as relevant income in the month it is paid, so if you get a large bonus your real MPF that month may be higher (still capped at $1,500). 本工具強積金只按月薪計算；花紅在發放月份亦屬有關入息，實際供款可能較高（仍以 $1,500 為上限）。</p>
+<p class="note" id="mpfProj"></p>
+
+<h2>What-if 多想一步</h2>
+<table id="whatifTable"></table>
+<p class="note">What an extra HK$1,000/month of salary would cost in tax (marginal rate), and what each deduction saves you this year. 加薪每月 HK$1,000 要多交幾多稅（邊際稅率），以及每項扣除今年幫你慳幾多稅。</p>
+
+<div id="jointBox" style="display:none">
+<h2>Joint vs separate assessment 合併 vs 分開評稅</h2>
+<table id="jointTable"></table>
+<p class="note">Pooled comparison — see §6 for the pooling rules. 合併計算，規則見第 6 節。</p>
+</div>
+</div>
+
+<div class="warn"><b>When this tool does NOT apply 本工具不適用 / 未計項目.</b>
+<ul style="margin:6px 0 0;padding-left:18px">
+<li><b>Personal assessment 個人入息課稅</b> — not modelled. It only helps if you have rental or business income to aggregate with your salary; this tool covers salaries tax on employment income only. 如有租金或業務入息，請用稅務局計算機或諮詢稅務顧問。</li>
+<li><b>Proposed $160,000 child allowance</b> — the Sep 2026 Policy Address proposal for second and subsequent children born on/after 16 Sep 2026 is not yet law, so it is not applied. 建議中第二名及之後子女 $160,000 免稅額未立法，不適用。</li>
+<li><b>Spouse's personal-disability allowance</b> — not modelled in the joint comparison (your own is modelled in §4). 配偶本人的傷殘人士免稅額未計入合併比較。</li>
+<li><b>Rent / home-loan caps under joint assessment</b> — modelled as one cap per couple (see §6). If you and your spouse pay rent or mortgage interest under separate arrangements, check the IRD rules before relying on the joint figure. 合併評稅下租金 / 房貸以每對夫婦一個上限計。</li>
+<li><b>Bonus-month MPF</b> — MPF here is calculated on monthly salary only (see the MPF note above). 花紅月份的強積金另計。</li>
+</ul></div>
+<div class="warn"><b>Estimate only — not tax advice 僅供估算，並非稅務建議.</b> Figures are from the IRD Allowances, Deductions and Tax Rate Table (PAM 61, Aug 2026) and the MPFA. Rules have conditions (residence, stamped tenancy, maintenance of dependants, etc.) this tool does not check. Check <b>ird.gov.hk</b> and <b>mpfa.org.hk</b> before filing, or ask a tax adviser. 數字來自稅務局 PAM 61 表（2026 年 8 月）及積金局；各項扣除/免稅額均有條件，本工具不作核查。報稅前請核對 ird.gov.hk 及 mpfa.org.hk，或諮詢稅務顧問。</div>
+<p class="note">Sources 資料來源：IRD PAM 61 (Aug 2026) — allowances, deductions, progressive &amp; two-tier standard rates, tax reduction (2025/26: 100%, max $3,000); MPFA — MPF 5%, min relevant income $7,100/mo, max $30,000/mo, cap $1,500/mo. 2026/27 one-off reduction not yet announced (expected in the Feb 2027 Budget) — the toggle does nothing for 2026/27 until then. Single-parent allowance 2025/26 $132,000 / 2026/27 $145,000 (PAM 61); home-loan interest cap $100,000/year for up to 20 years; self-education cap $100,000/year; elderly residential care expenses cap $100,000/year; disabled dependant allowance $75,000 (2025/26) / $82,500 (2026/27) per dependant, personal disability allowance the same amounts, dependent brother/sister allowance $37,500 / $41,250 each; extra child allowance in the year of birth equals one year's child allowance, and from 2026/27 it runs for a second year (children born on/after 1 Apr 2025). The Sep 2026 Policy Address proposal of a $160,000 child allowance for second and subsequent children born on/after 16 Sep 2026 is not yet law, so this tool does not apply it. See README.md for full sources and the corrections to the figures in the original brief.</p>
+</div>
+
+<script>
+/* Pure calculation logic — ES5 only, no DOM inside calcTax() and friends.
+   The same functions are duplicated in tests/test_tax.js (with a comment
+   saying so) so they can be run under node. Keep the two copies in sync. */
+var MPF_MIN = 7100, MPF_MAX = 30000, MPF_RATE = 0.05, MPF_CAP = 1500;
+var MPF_DEDUCTION_CAP = 18000, TVC_CAP = 60000;
+var RENT_CAP = 100000, RENT_CAP_EXTRA = 120000;
+var HOMELOAN_CAP = 100000, SELFEDU_CAP = 100000;
+var ELDERLY_CAP = 100000;
+
+function getRates(year) {
+  if (year === '2026/27') {
+    return { year: year, basic: 145000, married: 290000, child: 140000,
+      parent60: 55000, singleParent: 145000,
+      disabledDependant: 82500, personalDisability: 82500, sibling: 41250,
+      reductionCap: 0, reductionNote: 'not yet announced' };
+  }
+  return { year: '2025/26', basic: 132000, married: 264000, child: 130000,
+    parent60: 50000, singleParent: 132000,
+    disabledDependant: 75000, personalDisability: 75000, sibling: 37500,
+    reductionCap: 3000, reductionNote: 'announced' };
+}
+function round2(x) { return Math.round(x * 100) / 100; }
+function money(x) {
+  x = Math.round(x);
+  var s = String(Math.abs(x)), out = '', i;
+  while (s.length > 3) { out = ',' + s.slice(-3) + out; s = s.slice(0, -3); }
+  out = s + out;
+  return (x < 0 ? '-HK$' : 'HK$') + out;
+}
+function mpfEmployeeMonthly(monthly) {
+  if (monthly < MPF_MIN) { return 0; }
+  return Math.min(round2(monthly * MPF_RATE), MPF_CAP);
+}
+function mpfEmployerMonthly(monthly) {
+  return Math.min(round2(monthly * MPF_RATE), MPF_CAP);
+}
+function progressiveTax(nci) {
+  var bands = [[50000, 0.02], [50000, 0.06], [50000, 0.10], [50000, 0.14]];
+  var tax = 0, rest = nci, i;
+  for (i = 0; i < bands.length; i++) {
+    var take = Math.min(rest, bands[i][0]);
+    if (take <= 0) { break; }
+    tax += take * bands[i][1];
+    rest -= take;
+  }
+  if (rest > 0) { tax += rest * 0.17; }
+  return Math.round(tax);
+}
+/* Band-by-band breakdown of the progressive tax on a net chargeable income. */
+function progressiveBands(nci) {
+  var defs = [[50000, 0.02], [50000, 0.06], [50000, 0.10], [50000, 0.14], [Infinity, 0.17]];
+  var out = [], rest = Math.max(0, nci), i;
+  for (i = 0; i < defs.length; i++) {
+    var take = Math.min(rest, defs[i][0]);
+    if (take <= 0) { break; }
+    out.push({ amount: take, rate: defs[i][1], tax: Math.round(take * defs[i][1]) });
+    rest -= take;
+  }
+  return out;
+}
+function standardTax(netIncome) {
+  var first = Math.min(netIncome, 5000000);
+  var rest = Math.max(0, netIncome - 5000000);
+  return Math.round(first * 0.15 + rest * 0.16);
+}
+function calcTax(inp) {
+  var r = getRates(inp.year);
+  var monthly = Math.max(0, inp.monthlySalary || 0);
+  var bonus = Math.max(0, inp.bonus || 0);
+  var annualIncome = round2(monthly * 12 + bonus);
+  var empMo = mpfEmployeeMonthly(monthly);
+  var erMo = mpfEmployerMonthly(monthly);
+  var empAnnual = round2(empMo * 12);
+  var erAnnual = round2(erMo * 12);
+  var mandatory = Math.min(empAnnual, MPF_DEDUCTION_CAP);
+  var tvc = Math.min(Math.max(0, inp.tvc || 0), TVC_CAP);
+  var rentCap = inp.rentExtra ? RENT_CAP_EXTRA : RENT_CAP;
+  var rent = Math.min(Math.max(0, inp.monthlyRent || 0) * 12, rentCap);
+  var homeLoan = Math.min(Math.max(0, inp.homeLoan || 0), HOMELOAN_CAP);
+  var selfEdu = Math.min(Math.max(0, inp.selfEdu || 0), SELFEDU_CAP);
+  var elderlyCare = Math.min(Math.max(0, inp.elderlyCare || 0), ELDERLY_CAP);
+  var deductions = round2(mandatory + tvc + rent + homeLoan + selfEdu + elderlyCare);
+  var netIncome = Math.max(0, round2(annualIncome - deductions));
+  var children = Math.min(9, Math.max(0, Math.floor(inp.children || 0)));
+  var parents = Math.min(9, Math.max(0, Math.floor(inp.parents || 0)));
+  var parentRate = inp.parentAge === '55-59' ? r.parent60 / 2 : r.parent60;
+  var baseAllowance = inp.married ? r.married : r.basic;
+  var childAllowance = children * r.child;
+  var parentAllowance = parents * parentRate * (inp.parentsLiving ? 2 : 1);
+  var singleParentAllowance = (inp.singleParent && !inp.married && children > 0) ? r.singleParent : 0;
+  var childBornExtra = (inp.childBornThisYear && children > 0) ? r.child : 0;
+  /* From 2026/27 the extra child allowance runs for a second year
+     (children born on/after 1 Apr 2025): a child born last year still
+     gets one extra allowance in 2026/27. In 2025/26 it is birth-year only. */
+  if (inp.childBornLastYear && children > 0 && inp.year === '2026/27') { childBornExtra += r.child; }
+  /* Disabled dependant allowance is additional to the child / parent
+     allowance for the same person, so a disabled child gets both. */
+  var disabledCount = Math.min(9, Math.max(0, Math.floor(inp.disabledDependants || 0)));
+  var disabledAllowance = disabledCount * r.disabledDependant;
+  var personalDisabilityAllowance = inp.personalDisability ? r.personalDisability : 0;
+  var siblingCount = Math.min(9, Math.max(0, Math.floor(inp.siblings || 0)));
+  var siblingAllowance = siblingCount * r.sibling;
+  var allowances = baseAllowance + childAllowance + parentAllowance +
+    singleParentAllowance + childBornExtra + disabledAllowance +
+    personalDisabilityAllowance + siblingAllowance;
+  var nci = Math.max(0, netIncome - allowances);
+  var prog = progressiveTax(nci);
+  var std = standardTax(netIncome);
+  var useStandard = std < prog;
+  var beforeReduction = useStandard ? std : prog;
+  var reduction = 0;
+  if (inp.applyReduction && r.reductionCap > 0) {
+    reduction = Math.min(beforeReduction, r.reductionCap);
+  }
+  var payable = Math.max(0, beforeReduction - reduction);
+  var takeHomeMonthly = round2((annualIncome - empAnnual - payable) / 12);
+  var eff = annualIncome > 0 ? round2(payable / annualIncome * 100) : 0;
+  return {
+    year: r.year, rates: r, annualIncome: annualIncome,
+    mpfEmployeeMonthly: empMo, mpfEmployerMonthly: erMo,
+    mpfEmployeeAnnual: empAnnual, mpfEmployerAnnual: erAnnual,
+    mandatoryDeduction: mandatory, tvcDeductible: tvc,
+    rentDeduction: rent, rentCap: rentCap,
+    homeLoanDeduction: homeLoan, selfEduDeduction: selfEdu,
+    elderlyCareDeduction: elderlyCare,
+    totalDeductions: deductions,
+    netIncome: netIncome, baseAllowance: baseAllowance,
+    childAllowance: childAllowance, parentAllowance: parentAllowance,
+    parentRate: parentRate,
+    singleParentAllowance: singleParentAllowance,
+    childBornExtra: childBornExtra,
+    disabledDependantAllowance: disabledAllowance,
+    personalDisabilityAllowance: personalDisabilityAllowance,
+    siblingAllowance: siblingAllowance,
+    totalAllowances: allowances, netChargeableIncome: nci,
+    progressiveTax: prog, standardTax: std, useStandard: useStandard,
+    taxBeforeReduction: beforeReduction, reduction: reduction,
+    taxPayable: payable, takeHomeMonthly: takeHomeMonthly,
+    effectiveRate: eff
+  };
+}
+/* Same inputs in both years, side by side. */
+function compareYears(inp) {
+  var a = calcTax(extend(inp, { year: '2025/26' }));
+  var b = calcTax(extend(inp, { year: '2026/27' }));
+  var diff = b.taxPayable - a.taxPayable;
+  var pct = a.taxPayable > 0 ? round2(diff / a.taxPayable * 100) : 0;
+  return { y2526: a, y2627: b, diff: diff, pct: pct,
+    cheaper: diff < 0 ? '2026/27' : (diff > 0 ? '2025/26' : 'same') };
+}
+function extend(base, over) {
+  var out = {}, k;
+  for (k in base) { out[k] = base[k]; }
+  for (k in over) { out[k] = over[k]; }
+  return out;
+}
+/* Extra tax from +extraMonthly/month of salary (marginal rate). */
+function marginalTax(inp, extraMonthly) {
+  var base = calcTax(inp);
+  var up = calcTax(extend(inp, { monthlySalary: (inp.monthlySalary || 0) + extraMonthly }));
+  var extra = up.taxPayable - base.taxPayable;
+  var rate = extraMonthly > 0 ? round2(extra / (extraMonthly * 12) * 100) : 0;
+  return { baseTax: base.taxPayable, newTax: up.taxPayable, extraTax: extra, marginalRate: rate };
+}
+/* Tax saved by one deduction, holding everything else fixed. */
+function savingFrom(inp, field) {
+  var base = calcTax(inp);
+  var zero = extend(inp, {});
+  zero[field] = 0;
+  if (field === 'monthlyRent') { zero.rentExtra = false; }
+  var diff = calcTax(zero).taxPayable - base.taxPayable;
+  return diff < 0 ? 0 : diff;
+}
+/* Future value of equal annual MPF contributions at a fixed return. */
+function mpfProjection(annualTotal, years, rate) {
+  if (years <= 0 || annualTotal <= 0) { return 0; }
+  if (rate === 0) { return Math.round(annualTotal * years); }
+  return Math.round(annualTotal * (Math.pow(1 + rate, years) - 1) / rate);
+}
+/* Joint vs separate assessment. Spouse-side deductions and dependant
+   allowances come from spouseOpts (all optional, default 0). Pooling
+   rules (see §6 note on the page): mandatory MPF sums per person (each
+   capped $18,000); TVC, self-education and elderly care pool per person
+   (caps $60,000 / $100,000 / $100,000 each); rent and home-loan interest
+   pool per couple (one $100,000 cap each — $120,000 rent cap when the
+   child condition applies); disabled-dependant and sibling allowances
+   pool by count. The spouse's own personal-disability allowance is not
+   modelled. Under separate assessment the children and parents stay
+   with you; the spouse is calculated with the basic allowance only,
+   plus their own deductions and dependant allowances above. */
+function calcJoint(inp, spouseMonthly, spouseBonus, spouseOpts) {
+  var so = spouseOpts || {};
+  var spouse = calcTax(extend(inp, { monthlySalary: spouseMonthly || 0,
+    bonus: spouseBonus || 0, married: false, children: 0, parents: 0,
+    parentsLiving: false, singleParent: false, childBornThisYear: false,
+    childBornLastYear: false,
+    monthlyRent: so.monthlyRent || 0, rentExtra: false,
+    homeLoan: so.homeLoan || 0, selfEdu: so.selfEdu || 0,
+    elderlyCare: so.elderlyCare || 0, tvc: so.tvc || 0,
+    disabledDependants: so.disabledDependants || 0,
+    siblings: so.siblings || 0, personalDisability: false }));
+  var mine = calcTax(inp);
+  var separate = mine.taxPayable + spouse.taxPayable;
+  var jointInp = extend(inp, {
+    monthlySalary: (inp.monthlySalary || 0) + (spouseMonthly || 0),
+    bonus: (inp.bonus || 0) + (spouseBonus || 0),
+    married: true, singleParent: false,
+    disabledDependants: (inp.disabledDependants || 0) + (so.disabledDependants || 0),
+    siblings: (inp.siblings || 0) + (so.siblings || 0) });
+  /* Joint MPF deduction is the sum of both spouses' mandatory deductions,
+     and joint income is the sum — calcTax on the combined salary would
+     cap MPF at $18,000 once, so recompute the joint figure directly. */
+  var joint = calcTax(jointInp);
+  var combinedMandatory = Math.min(mine.mpfEmployeeAnnual, MPF_DEDUCTION_CAP) +
+    Math.min(spouse.mpfEmployeeAnnual, MPF_DEDUCTION_CAP);
+  var jointTvc = joint.tvcDeductible + Math.min(Math.max(0, so.tvc || 0), TVC_CAP);
+  var jointRent = Math.min((Math.max(0, inp.monthlyRent || 0) +
+    Math.max(0, so.monthlyRent || 0)) * 12, joint.rentCap);
+  var jointHomeLoan = Math.min(joint.homeLoanDeduction +
+    Math.max(0, so.homeLoan || 0), HOMELOAN_CAP);
+  var jointSelfEdu = joint.selfEduDeduction +
+    Math.min(Math.max(0, so.selfEdu || 0), SELFEDU_CAP);
+  var jointElderly = joint.elderlyCareDeduction +
+    Math.min(Math.max(0, so.elderlyCare || 0), ELDERLY_CAP);
+  var jointDeductions = round2(combinedMandatory + jointTvc + jointRent +
+    jointHomeLoan + jointSelfEdu + jointElderly);
+  var jointNet = Math.max(0, round2(joint.annualIncome - jointDeductions));
+  var jointAllow = joint.totalAllowances;
+  var jointNci = Math.max(0, jointNet - jointAllow);
+  var jointProg = progressiveTax(jointNci);
+  var jointStd = standardTax(jointNet);
+  var jointBefore = Math.min(jointProg, jointStd);
+  var jointReduction = (inp.applyReduction && joint.rates.reductionCap > 0)
+    ? Math.min(jointBefore, joint.rates.reductionCap) : 0;
+  var jointPayable = Math.max(0, jointBefore - jointReduction);
+  var better = separate < jointPayable ? 'separate' : (jointPayable < separate ? 'joint' : 'same');
+  return { separate: separate, joint: jointPayable, mine: mine.taxPayable,
+    spouse: spouse.taxPayable, better: better,
+    saving: Math.abs(separate - jointPayable),
+    jointDeductions: jointDeductions, jointNet: jointNet };
+}
+/* ---- UI (DOM only below this line) ---- */
+function num(id) { var v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+function row(label, val, bold) {
+  return '<tr><td' + (bold ? '><b>' : '>') + label + (bold ? '</b>' : '') + '</td><td class="num">' + val + '</td></tr>';
+}
+function updateYearNotes() {
+  var y = document.getElementById('year').value;
+  document.getElementById('yearNote').textContent =
+    y === '2025/26'
+      ? 'Allowances: basic $132,000 / married $264,000 / child $130,000 each / dependent parent 60+ $50,000 each / single parent $132,000 / disabled dependant or personal disability $75,000 each / dependent brother or sister $37,500 each. One-off reduction: 100%, max $3,000.'
+      : 'Allowances: basic $145,000 / married $290,000 / child $140,000 each / dependent parent 60+ $55,000 each / single parent $145,000 / disabled dependant or personal disability $82,500 each / dependent brother or sister $41,250 each. One-off reduction for 2026/27: NOT yet announced — the toggle below will have no effect for this year until the Feb 2027 Budget announces it.';
+  document.getElementById('reductionNote').textContent =
+    y === '2025/26'
+      ? '2025/26: 100% reduction, capped at HK$3,000 per case (IRD PAM 61, Aug 2026). Announced annually — check the Budget each year.'
+      : '2026/27: no reduction has been announced yet. Leave the box ticked if you like — it applies $0 until a reduction is announced.';
+}
+function readInputs() {
+  return {
+    year: document.getElementById('year').value,
+    monthlySalary: num('salary'), bonus: num('bonus'),
+    monthlyRent: num('rent'), rentExtra: document.getElementById('rentExtra').checked,
+    tvc: num('tvc'), homeLoan: num('homeloan'), selfEdu: num('selfedu'),
+    elderlyCare: num('elderlycare'),
+    married: document.getElementById('married').value === 'married',
+    children: num('children'), parents: num('parents'),
+    parentAge: document.getElementById('parentAge').value,
+    parentsLiving: document.getElementById('living').value === 'yes',
+    singleParent: document.getElementById('singleParent').checked,
+    childBornThisYear: document.getElementById('childBorn').checked,
+    childBornLastYear: document.getElementById('childBornLast').checked,
+    disabledDependants: num('disabledDeps'), siblings: num('siblings'),
+    personalDisability: document.getElementById('personalDisability').checked,
+    applyReduction: document.getElementById('reduction').checked
+  };
+}
+function calculate() {
+  var inp = readInputs();
+  var c = calcTax(inp);
+  try { localStorage.setItem('hkTaxMpf', JSON.stringify(inp)); } catch (e) {}
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('rYearTag').textContent = c.year;
+  document.getElementById('rTax').textContent = money(c.taxPayable) + ' / year';
+  document.getElementById('rMethod').textContent = c.useStandard
+    ? '(standard rate is lower — 標準稅率較低)' : '(progressive rates are lower — 累進稅率較低)';
+  document.getElementById('rTakeHome').textContent = money(c.takeHomeMonthly) + ' / month';
+  document.getElementById('rEff').textContent = c.effectiveRate.toFixed(2) + '% of gross income';
+  document.getElementById('rMonthlyTax').textContent =
+    'That is about ' + money(round2(c.taxPayable / 12)) + ' of tax per month, on top of ' +
+    money(c.mpfEmployeeMonthly) + '/month employee MPF. 每月約 ' + money(round2(c.taxPayable / 12)) +
+    ' 稅款，另加僱員強積金每月 ' + money(c.mpfEmployeeMonthly) + '。';
+  /* Year comparison */
+  var cmp = compareYears(inp);
+  var a = cmp.y2526, b = cmp.y2627;
+  var h = '<tr><th></th><th class="num">2025/26</th><th class="num">2026/27</th><th class="num">Difference 差額</th></tr>';
+  function cmpRow(label, va, vb, vd, goodLow) {
+    var winA = goodLow ? (va < vb) : (va > vb);
+    var winB = goodLow ? (vb < va) : (vb > va);
+    return '<tr><td>' + label + '</td><td class="num' + (winA ? ' win' : '') + '">' + va +
+      '</td><td class="num' + (winB ? ' win' : '') + '">' + vb + '</td><td class="num">' + vd + '</td></tr>';
+  }
+  h += cmpRow('Tax payable 應繳稅款', money(a.taxPayable), money(b.taxPayable),
+    (cmp.diff >= 0 ? '+' : '') + money(cmp.diff), true);
+  h += cmpRow('Monthly take-home 每月實得', money(a.takeHomeMonthly), money(b.takeHomeMonthly),
+    (b.takeHomeMonthly - a.takeHomeMonthly >= 0 ? '+' : '') + money(b.takeHomeMonthly - a.takeHomeMonthly), false);
+  h += cmpRow('Total allowances 免稅額總數', money(a.totalAllowances), money(b.totalAllowances), '+HK$' + (b.totalAllowances - a.totalAllowances), false);
+  h += cmpRow('Net chargeable income 應課稅入息', money(a.netChargeableIncome), money(b.netChargeableIncome), money(b.netChargeableIncome - a.netChargeableIncome), true);
+  document.getElementById('cmpTable').innerHTML = h;
+  document.getElementById('cmpNote').textContent = cmp.cheaper === 'same'
+    ? 'Both years charge the same tax on these inputs. 兩年稅款相同。'
+    : (cmp.cheaper === '2026/27'
+      ? 'On these inputs 2026/27 is cheaper by ' + money(-cmp.diff) + ' (' + Math.abs(cmp.pct) + '%), mostly because allowances rose — but its one-off reduction is not yet announced, so if a reduction is announced in the Feb 2027 Budget the gap will change. 2026/27 平 ' + money(-cmp.diff) + '，主要因為免稅額提高；但該年度寬減尚未公布，2027 年 2 月預算案公布後差距會變。'
+      : 'On these inputs 2025/26 is cheaper by ' + money(cmp.diff) + ' (' + Math.abs(cmp.pct) + '%) — because its announced 100% reduction (max $3,000) outweighs the lower allowances. 2025/26 平 ' + money(cmp.diff) + '，因為已公布的 100% 寬減（上限 $3,000）抵銷了較低的免稅額。');
+  /* Breakdown */
+  var br = '';
+  br += row('Annual income 全年入息 (salary × 12 + bonus)', money(c.annualIncome));
+  br += row('Less: mandatory MPF deduction 減：強制性強積金供款 (max $18,000)', '-' + money(c.mandatoryDeduction));
+  br += row('Less: TVC deduction 減：自願性供款扣稅 (max $60,000)', '-' + money(c.tvcDeductible));
+  br += row('Less: rent deduction 減：租金扣除 (cap ' + money(c.rentCap) + ')', '-' + money(c.rentDeduction));
+  br += row('Less: home loan interest 減：居所貸款利息 (max $100,000)', '-' + money(c.homeLoanDeduction));
+  br += row('Less: self-education 減：個人進修開支 (max $100,000)', '-' + money(c.selfEduDeduction));
+  br += row('Less: elderly residential care 減：長者住宿照顧開支 (max $100,000)', '-' + money(c.elderlyCareDeduction));
+  br += row('Net income 淨入息', money(c.netIncome), true);
+  br += row(inp.married ? 'Married person\u2019s allowance 已婚人士免稅額' : 'Basic allowance 基本免稅額', '-' + money(c.baseAllowance));
+  br += row('Child allowance 子女免稅額 (' + Math.min(9, Math.max(0, Math.floor(inp.children || 0))) + ' × ' + money(c.rates.child) + ')', '-' + money(c.childAllowance));
+  if (c.childBornExtra) { br += row('Extra: child born this / last year 額外：今年/上年出生子女', '-' + money(c.childBornExtra)); }
+  br += row('Dependent parent allowance 供養父母免稅額 (' + Math.min(9, Math.max(0, Math.floor(inp.parents || 0))) + ' × ' + money(c.parentRate) + (inp.parentsLiving ? ' × 2, living together 同住' : '') + ')', '-' + money(c.parentAllowance));
+  if (c.disabledDependantAllowance) { br += row('Disabled dependant allowance 傷殘受養人免稅額 (' + Math.min(9, Math.max(0, Math.floor(inp.disabledDependants || 0))) + ' × ' + money(c.rates.disabledDependant) + ')', '-' + money(c.disabledDependantAllowance)); }
+  if (c.siblingAllowance) { br += row('Dependent brother / sister allowance 供養兄弟姊妹免稅額 (' + Math.min(9, Math.max(0, Math.floor(inp.siblings || 0))) + ' × ' + money(c.rates.sibling) + ')', '-' + money(c.siblingAllowance)); }
+  if (c.personalDisabilityAllowance) { br += row('Personal disability allowance 傷殘人士免稅額', '-' + money(c.personalDisabilityAllowance)); }
+  if (c.singleParentAllowance) { br += row('Single-parent allowance 單親免稅額', '-' + money(c.singleParentAllowance)); }
+  br += row('Total allowances 免稅額總數', '-' + money(c.totalAllowances));
+  br += row('Net chargeable income 應課稅入息', money(c.netChargeableIncome), true);
+  br += row('Tax before reduction 寬減前稅款', money(c.taxBeforeReduction));
+  br += row('Less: one-off tax reduction 減：一次性稅務寬減', '-' + money(c.reduction));
+  br += row('Tax payable 應繳稅款', money(c.taxPayable), true);
+  document.getElementById('breakTable').innerHTML = br;
+  /* Bands */
+  var bands = progressiveBands(c.netChargeableIncome);
+  var maxBand = 0, i;
+  for (i = 0; i < bands.length; i++) { if (bands[i].amount > maxBand) { maxBand = bands[i].amount; } }
+  var bh = '<tr><th>Band 層</th><th class="num">Rate 稅率</th><th class="num">Income 入息</th><th class="num">Tax 稅款</th><th></th></tr>';
+  if (!bands.length) { bh += '<tr><td colspan="5">No chargeable income — no progressive tax. 無應課稅入息，無累進稅。</td></tr>'; }
+  for (i = 0; i < bands.length; i++) {
+    var pct = maxBand ? Math.round(bands[i].amount / maxBand * 100) : 0;
+    bh += '<tr class="barrow"><td>' + money(bands[i].amount) + ' at ' + Math.round(bands[i].rate * 100) + '%</td><td class="num">' +
+      Math.round(bands[i].rate * 100) + '%</td><td class="num">' + money(bands[i].amount) +
+      '</td><td class="num">' + money(bands[i].tax) + '</td><td style="width:30%"><div class="bar" style="width:' + pct + '%"></div></td></tr>';
+  }
+  bh += row('Total progressive tax 累進稅總數', money(c.progressiveTax), true);
+  document.getElementById('bandTable').innerHTML = bh;
+  var h2 = '';
+  h2 += row('Progressive tax 累進稅 (' + money(c.netChargeableIncome) + ' at 2–17%)', money(c.progressiveTax));
+  h2 += row('Standard tax 標準稅 (' + money(c.netIncome) + ' at 15% / 16% over $5M)', money(c.standardTax));
+  h2 += row('Charged 實際徵收 (' + (c.useStandard ? 'standard 標準稅率' : 'progressive 累進稅率') + ', lower of the two)', money(c.taxBeforeReduction), true);
+  document.getElementById('rateTable').innerHTML = h2;
+  var h3 = '';
+  h3 += row('Employee MPF 僱員供款', money(c.mpfEmployeeMonthly) + ' / month · ' + money(c.mpfEmployeeAnnual) + ' / year');
+  h3 += row('Employer MPF 僱主供款', money(c.mpfEmployerMonthly) + ' / month · ' + money(c.mpfEmployerAnnual) + ' / year');
+  h3 += row('Total MPF into your account 強積金總供款', money(c.mpfEmployeeAnnual + c.mpfEmployerAnnual) + ' / year', true);
+  document.getElementById('mpfTable').innerHTML = h3;
+  var annualMPF = c.mpfEmployeeAnnual + c.mpfEmployerAnnual;
+  document.getElementById('mpfProj').textContent =
+    'If you keep contributing ' + money(annualMPF) + '/year, at a 3% annual return that is about ' +
+    money(mpfProjection(annualMPF, 10, 0.03)) + ' after 10 years and ' +
+    money(mpfProjection(annualMPF, 30, 0.03)) + ' after 30 years (estimate only — returns are not guaranteed, fees not included). ' +
+    '如每年供款 ' + money(annualMPF) + '，以每年 3% 回報估算，10 年後約 ' + money(mpfProjection(annualMPF, 10, 0.03)) +
+    '，30 年後約 ' + money(mpfProjection(annualMPF, 30, 0.03)) + '（僅供估算，回報並無保證，未計收費）。';
+  /* What-if */
+  var mg = marginalTax(inp, 1000);
+  var wh = '<tr><th>What-if 假設</th><th class="num">Effect 影響</th></tr>';
+  wh += '<tr><td>Salary +HK$1,000/month 加薪每月 $1,000</td><td class="num">Extra tax 每年多交稅 ' + money(mg.extraTax) + ' (' + mg.marginalRate.toFixed(1) + '% of the raise)</td></tr>';
+  wh += '<tr><td>Rent deduction 租金扣除 saves 慳稅</td><td class="num">' + money(savingFrom(inp, 'monthlyRent')) + ' / year</td></tr>';
+  wh += '<tr><td>TVC deduction 自願性供款 saves 慳稅</td><td class="num">' + money(savingFrom(inp, 'tvc')) + ' / year</td></tr>';
+  wh += '<tr><td>Home loan interest 居所貸款利息 saves 慳稅</td><td class="num">' + money(savingFrom(inp, 'homeLoan')) + ' / year</td></tr>';
+  wh += '<tr><td>Self-education 個人進修 saves 慳稅</td><td class="num">' + money(savingFrom(inp, 'selfEdu')) + ' / year</td></tr>';
+  wh += '<tr><td>Elderly care 長者住宿照顧開支 saves 慳稅</td><td class="num">' + money(savingFrom(inp, 'elderlyCare')) + ' / year</td></tr>';
+  document.getElementById('whatifTable').innerHTML = wh;
+  /* Joint */
+  if (document.getElementById('jointOn').checked) {
+    var j = calcJoint(inp, num('spouseSalary'), num('spouseBonus'), {
+      tvc: num('spouseTvc'), monthlyRent: num('spouseRent'),
+      homeLoan: num('spouseHomeLoan'), selfEdu: num('spouseSelfEdu'),
+      elderlyCare: num('spouseElderly'),
+      disabledDependants: num('spouseDisabled'),
+      siblings: num('spouseSiblings') });
+    document.getElementById('jointBox').style.display = 'block';
+    var jh = '<tr><th>Method 方法</th><th class="num">Tax payable 應繳稅款</th></tr>';
+    jh += '<tr><td>Separate 分開評稅 (you 你 ' + money(j.mine) + ' + spouse 配偶 ' + money(j.spouse) + ')</td><td class="num">' + money(j.separate) + '</td></tr>';
+    jh += '<tr><td>Joint 合併評稅</td><td class="num">' + money(j.joint) + '</td></tr>';
+    jh += row(j.better === 'same' ? 'Both methods charge the same 兩者相同' :
+      (j.better === 'separate' ? 'Separate is cheaper — saves 分開平，慳' : 'Joint is cheaper — saves 合併平，慳'),
+      money(j.saving) + ' / year', true);
+    document.getElementById('jointTable').innerHTML = jh;
+  } else {
+    document.getElementById('jointBox').style.display = 'none';
+  }
+  document.getElementById('result').scrollIntoView();
+}
+function copySummary() {
+  var inp = readInputs();
+  var c = calcTax(inp);
+  var cmp = compareYears(inp);
+  var txt = 'HK Salaries Tax ' + c.year + ': salary HK$' + inp.monthlySalary + '/mo, tax payable ' +
+    money(c.taxPayable) + '/yr, take-home ' + money(c.takeHomeMonthly) + '/mo, effective rate ' +
+    c.effectiveRate.toFixed(2) + '%. 2025/26 tax ' + money(cmp.y2526.taxPayable) + ' vs 2026/27 ' +
+    money(cmp.y2627.taxPayable) + '. Estimate only — IRD PAM 61.';
+  /* Same honest-copy pattern as the reader: only claim success when the
+     copy actually worked (clipboard can reject on iOS Safari). */
+  function done(ok) { alert(ok ? '已複製摘要！' : '複製唔到，請手動長按複製。'); }
+  function fallback() {
+    var ta = document.createElement('textarea'); ta.value = txt;
+    document.body.appendChild(ta); ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    done(!!ok);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(function () { done(true); }, fallback);
+  } else { fallback(); }
+}
+function preset(salary, bonus, married, children, parents) {
+  document.getElementById('salary').value = salary;
+  document.getElementById('bonus').value = bonus;
+  document.getElementById('married').value = married;
+  document.getElementById('children').value = children;
+  document.getElementById('parents').value = parents;
+  document.getElementById('rent').value = 0;
+  document.getElementById('rentExtra').checked = false;
+  document.getElementById('tvc').value = 0;
+  document.getElementById('homeloan').value = 0;
+  document.getElementById('selfedu').value = 0;
+  document.getElementById('elderlycare').value = 0;
+  document.getElementById('disabledDeps').value = 0;
+  document.getElementById('siblings').value = 0;
+  document.getElementById('personalDisability').checked = false;
+  /* Presets are full scenarios, not just salaries: clear the family and
+     spouse options too, or a stale tick silently changes the answer. */
+  document.getElementById('singleParent').checked = false;
+  document.getElementById('childBorn').checked = false;
+  document.getElementById('childBornLast').checked = false;
+  document.getElementById('jointOn').checked = false;
+  document.getElementById('spouseSalary').value = 0;
+  document.getElementById('spouseBonus').value = 0;
+  document.getElementById('spouseTvc').value = 0;
+  document.getElementById('spouseRent').value = 0;
+  document.getElementById('spouseHomeLoan').value = 0;
+  document.getElementById('spouseSelfEdu').value = 0;
+  document.getElementById('spouseElderly').value = 0;
+  document.getElementById('spouseDisabled').value = 0;
+  document.getElementById('spouseSiblings').value = 0;
+  calculate();
+}
+function resetForm() {
+  document.getElementById('salary').value = 30000;
+  document.getElementById('bonus').value = 0;
+  document.getElementById('rent').value = 0;
+  document.getElementById('rentExtra').checked = false;
+  document.getElementById('tvc').value = 0;
+  document.getElementById('homeloan').value = 0;
+  document.getElementById('selfedu').value = 0;
+  document.getElementById('elderlycare').value = 0;
+  document.getElementById('married').value = 'single';
+  document.getElementById('children').value = 0;
+  document.getElementById('parents').value = 0;
+  document.getElementById('parentAge').value = '60';
+  document.getElementById('living').value = 'no';
+  document.getElementById('singleParent').checked = false;
+  document.getElementById('childBorn').checked = false;
+  document.getElementById('childBornLast').checked = false;
+  document.getElementById('disabledDeps').value = 0;
+  document.getElementById('siblings').value = 0;
+  document.getElementById('personalDisability').checked = false;
+  document.getElementById('reduction').checked = true;
+  document.getElementById('jointOn').checked = false;
+  document.getElementById('spouseSalary').value = 0;
+  document.getElementById('spouseBonus').value = 0;
+  document.getElementById('spouseTvc').value = 0;
+  document.getElementById('spouseRent').value = 0;
+  document.getElementById('spouseHomeLoan').value = 0;
+  document.getElementById('spouseSelfEdu').value = 0;
+  document.getElementById('spouseElderly').value = 0;
+  document.getElementById('spouseDisabled').value = 0;
+  document.getElementById('spouseSiblings').value = 0;
+  document.getElementById('result').style.display = 'none';
+  try { localStorage.removeItem('hkTaxMpf'); } catch (e) {}
+}
+document.getElementById('year').onchange = updateYearNotes;
+(function init() {
+  updateYearNotes();
+  try {
+    var saved = localStorage.getItem('hkTaxMpf');
+    if (saved) {
+      var s = JSON.parse(saved);
+      if (s.year) { document.getElementById('year').value = s.year; }
+      if (typeof s.monthlySalary === 'number') { document.getElementById('salary').value = s.monthlySalary; }
+      if (typeof s.bonus === 'number') { document.getElementById('bonus').value = s.bonus; }
+      if (typeof s.monthlyRent === 'number') { document.getElementById('rent').value = s.monthlyRent; }
+      if (typeof s.tvc === 'number') { document.getElementById('tvc').value = s.tvc; }
+      if (typeof s.homeLoan === 'number') { document.getElementById('homeloan').value = s.homeLoan; }
+      if (typeof s.selfEdu === 'number') { document.getElementById('selfedu').value = s.selfEdu; }
+      if (typeof s.elderlyCare === 'number') { document.getElementById('elderlycare').value = s.elderlyCare; }
+      if (typeof s.married === 'boolean') { document.getElementById('married').value = s.married ? 'married' : 'single'; }
+      if (typeof s.children === 'number') { document.getElementById('children').value = s.children; }
+      if (typeof s.parents === 'number') { document.getElementById('parents').value = s.parents; }
+      if (typeof s.parentAge === 'string') { document.getElementById('parentAge').value = s.parentAge; }
+      if (typeof s.parentsLiving === 'boolean') { document.getElementById('living').value = s.parentsLiving ? 'yes' : 'no'; }
+      if (typeof s.singleParent === 'boolean') { document.getElementById('singleParent').checked = s.singleParent; }
+      if (typeof s.childBornThisYear === 'boolean') { document.getElementById('childBorn').checked = s.childBornThisYear; }
+      if (typeof s.childBornLastYear === 'boolean') { document.getElementById('childBornLast').checked = s.childBornLastYear; }
+      if (typeof s.rentExtra === 'boolean') { document.getElementById('rentExtra').checked = s.rentExtra; }
+      if (typeof s.disabledDependants === 'number') { document.getElementById('disabledDeps').value = s.disabledDependants; }
+      if (typeof s.siblings === 'number') { document.getElementById('siblings').value = s.siblings; }
+      if (typeof s.personalDisability === 'boolean') { document.getElementById('personalDisability').checked = s.personalDisability; }
+      if (typeof s.applyReduction === 'boolean') { document.getElementById('reduction').checked = s.applyReduction; }
+      updateYearNotes();
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
